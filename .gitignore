@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+
+# Logs
+logs/
+*.log
+
+# Runtime data
+*.pid
+*.lock
+database/
+
+# PDF outputs
+*.pdf
+
+# Environment variables
+.env*.local
+*.env
+.env.example
+.vscode
+tmp/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+temp.*
