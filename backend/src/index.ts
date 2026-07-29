@@ -2,6 +2,7 @@ import { serve, type HttpBindings } from '@hono/node-server'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger as honoLogger } from 'hono/logger'
+import type { Server } from 'node:http'
 import 'dotenv/config'
 
 import { rateLimit } from './middleware/rateLimit.js'
@@ -28,15 +29,13 @@ const v1 = new Hono()
 v1.route('/generate', generateRoute)
 v1.route('/resumes', historyRoute)
 app.route('/api/v1', v1)
-
 app.route('/api', v1)
 
 const port = process.env.PORT ? parseInt(process.env.PORT) : 3000
-log.info({ port }, 'starting server')
 
 const server = serve(
   { fetch: app.fetch, port },
   (info) => log.info({ addr: info }, 'listening'),
-)
+) as unknown as Server
 
 setupWebSocket(server)

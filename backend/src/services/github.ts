@@ -1,5 +1,5 @@
 import { Octokit } from '@octokit/rest'
-import { cache } from '../cache.js'
+import { cache } from './cache.js'
 import { createLogger } from '../utils/logger.js'
 import type { RestEndpointMethodTypes } from '@octokit/rest'
 
@@ -98,7 +98,7 @@ export async function fetchGitHubUserData(
   ])
 
   const allRepos = repos.data.filter(r => !r.fork)
-  const topRepos = [...allRepos].sort((a, b) => b.stargazers_count - a.stargazers_count).slice(0, 4)
+  const topRepos = [...allRepos].sort((a, b) => (b.stargazers_count ?? 0) - (a.stargazers_count ?? 0)).slice(0, 4)
 
   const languageBytes: Record<string, number> = {}
   allRepos.forEach(r => {
@@ -110,8 +110,8 @@ export async function fetchGitHubUserData(
   const sortedLangs = Object.entries(languageBytes)
     .sort(([, a], [, b]) => b - a)
 
-  const totalStars = allRepos.reduce((s, r) => s + r.stargazers_count, 0)
-  const totalForks = allRepos.reduce((s, r) => s + r.forks_count, 0)
+  const totalStars = allRepos.reduce((s, r) => s + (r.stargazers_count ?? 0), 0)
+  const totalForks = allRepos.reduce((s, r) => s + (r.forks_count ?? 0), 0)
   const totalPRs = events.data.filter((e: any) => e.type === 'PullRequestEvent').length
 
   const userCreated = user.data.created_at ? new Date(user.data.created_at).getFullYear() : 0
@@ -140,7 +140,7 @@ export async function fetchGitHubUserData(
       name: r.name,
       description: r.description || '',
       url: r.html_url,
-      stars: r.stargazers_count,
+      stars: r.stargazers_count ?? 0,
       language: r.language || 'Unknown',
     })),
     stats,

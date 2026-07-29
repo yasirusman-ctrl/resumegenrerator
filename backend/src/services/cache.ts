@@ -14,17 +14,20 @@ export class ResumeCache {
 
   constructor(redisUrl?: string) {
     if (redisUrl) {
-      import('ioredis')
-        .then(({ Redis }) => {
-          const client = new Redis(redisUrl, { lazyConnect: true })
-          client.connect().then(() => {
-            this.useRedis = true
-            log.info('redis connected')
-          }).catch((err: Error) => {
-            log.warn({ err: err.message }, 'redis unavailable, using memory')
-          })
-        })
-        .catch(() => log.info('ioredis not installed, using memory'))
+      this.initRedis(redisUrl)
+    }
+  }
+
+  private async initRedis(redisUrl: string) {
+    try {
+      // @ts-ignore - ioredis is optional
+      const { Redis } = await import('ioredis')
+      const client = new Redis(redisUrl, { lazyConnect: true })
+      await client.connect()
+      this.useRedis = true
+      log.info('redis connected')
+    } catch {
+      log.info('redis unavailable, using memory')
     }
   }
 

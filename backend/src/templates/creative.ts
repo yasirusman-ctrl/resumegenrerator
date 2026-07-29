@@ -18,6 +18,11 @@ ${sec.items.map(item => `\\item ${escapeLatex(item)}`).join('\n')}`,
     )
     .join('\n')
 
+  const langItems = Object.entries(data.languageBreakdown)
+    .slice(0, 8)
+    .map(([l]) => `\\textcolor{primary}{\\textbf{\\textbullet}}\\ ${escapeLatex(l)}`)
+    .join(' \\quad ')
+
   return `
 \\documentclass[10pt]{article}
 \\usepackage[margin=0.6in]{geometry}
@@ -71,10 +76,7 @@ ${sec.items.map(item => `\\item ${escapeLatex(item)}`).join('\n')}`,
 
 \\heading{Skills \\& Languages}
 \\hfill
-{\\small ${Object.entries(data.languageBreakdown)
-  .slice(0, 8)
-  .map(([l, c]) => \`\\textcolor{primary}{\\textbf{\\textbullet}}\\ ${escapeLatex(l)}\`)
-  .join(' \\quad ')}}
+{\\small ${langItems}}
 \\hfill
 
 \\bigskip

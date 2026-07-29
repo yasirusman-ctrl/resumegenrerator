@@ -34,7 +34,7 @@ export function validate<T>(schema: z.ZodSchema<T>) {
         400,
       )
     }
-    c.set('validated', result.data)
+    ;(c as any).set('validated', result.data)
     await next()
   }
 }

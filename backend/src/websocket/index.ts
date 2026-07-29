@@ -6,7 +6,7 @@ import { renderTemplate } from '../templates/registry.js'
 import { compileLaTeX } from '../utils/compile.js'
 import { createResume } from '../db/index.js'
 import { createLogger } from '../utils/logger.js'
-import type { ServerWebSocket } from 'ws'
+
 
 const log = createLogger('ws')
 
