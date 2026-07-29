@@ -2,15 +2,14 @@ import { Hono } from 'hono'
 import { getResumeByShareId, getResumesByUsername, getAllResumes } from '../../db/index.js'
 import { fetchGitHubUserData } from '../../services/github.js'
 import { renderTemplate } from '../../templates/registry.js'
+import { renderHtmlResume } from '../../templates/html.js'
 import { compileLaTeX } from '../../utils/compile.js'
 
 const history = new Hono()
 
 history.get('/', async (c) => {
   const username = c.req.query('username')
-  if (username) {
-    return c.json(getResumesByUsername(username))
-  }
+  if (username) return c.json(getResumesByUsername(username))
   return c.json(getAllResumes())
 })
 
@@ -39,6 +38,22 @@ history.get('/:shareId/pdf', async (c) => {
     return c.body(new Uint8Array(pdfBuffer))
   } catch {
     return c.json({ error: 'Failed to regenerate PDF' }, 500)
+  }
+})
+
+history.get('/:shareId/html', async (c) => {
+  const record = getResumeByShareId(c.req.param('shareId'))
+  if (!record) return c.json({ error: 'Resume not found' }, 404)
+
+  try {
+    const customSections = JSON.parse(record.custom_sections)
+    const userData = await fetchGitHubUserData(record.username, customSections)
+    const html = renderHtmlResume(userData)
+
+    c.header('Content-Type', 'text/html; charset=utf-8')
+    return c.body(html)
+  } catch {
+    return c.json({ error: 'Failed to render resume' }, 500)
   }
 })
 

@@ -42,8 +42,10 @@ export interface UserData {
   avatarUrl: string
   languages: string
   languageBreakdown: Record<string, number>
+  languageBytes: Record<string, number>
   projects: Project[]
   stats: UserStats
+  organizations: string[]
   customSections: CustomSection[]
 }
 
@@ -100,15 +102,45 @@ export async function fetchGitHubUserData(
   const allRepos = repos.data.filter(r => !r.fork)
   const topRepos = [...allRepos].sort((a, b) => (b.stargazers_count ?? 0) - (a.stargazers_count ?? 0)).slice(0, 4)
 
-  const languageBytes: Record<string, number> = {}
+  const langCounts: Record<string, number> = {}
   allRepos.forEach(r => {
     if (r.language) {
-      languageBytes[r.language] = (languageBytes[r.language] || 0) + 1
+      langCounts[r.language] = (langCounts[r.language] || 0) + 1
     }
   })
 
-  const sortedLangs = Object.entries(languageBytes)
-    .sort(([, a], [, b]) => b - a)
+  const languageBytes: Record<string, number> = {}
+  await Promise.all(
+    allRepos.slice(0, 20).map(async (r) => {
+      try {
+        const res = await retryRequest<any>(
+          (opts: any) => octokit.rest.repos.listLanguages(opts),
+          { owner: sanitized, repo: r.name },
+        )
+        const langs: Record<string, number> = res.data || res
+        for (const [lang, bytes] of Object.entries(langs)) {
+          languageBytes[lang] = (languageBytes[lang] || 0) + bytes
+        }
+      } catch {
+        log.warn({ repo: r.name }, 'failed to fetch languages')
+      }
+    }),
+  )
+
+  const sortedLangs = Object.entries(langCounts).sort(([, a], [, b]) => b - a)
+  const sortedLangBytes = Object.entries(languageBytes).sort(([, a], [, b]) => b - a)
+
+  let orgs: string[] = []
+  try {
+    const res = await retryRequest<any>(
+      (opts: any) => octokit.rest.orgs.listForUser(opts),
+      { username: sanitized, per_page: 10 },
+    )
+    const userOrgs: { login: string }[] = res.data || res
+    orgs = userOrgs.map(o => o.login)
+  } catch {
+    log.warn('failed to fetch orgs')
+  }
 
   const totalStars = allRepos.reduce((s, r) => s + (r.stargazers_count ?? 0), 0)
   const totalForks = allRepos.reduce((s, r) => s + (r.forks_count ?? 0), 0)
@@ -136,6 +168,7 @@ export async function fetchGitHubUserData(
     avatarUrl: user.data.avatar_url,
     languages: sortedLangs.slice(0, 5).map(([l]) => l).join(', ') || 'JavaScript',
     languageBreakdown: Object.fromEntries(sortedLangs),
+    languageBytes: Object.fromEntries(sortedLangBytes.slice(0, 10)),
     projects: topRepos.map(r => ({
       name: r.name,
       description: r.description || '',
@@ -144,6 +177,7 @@ export async function fetchGitHubUserData(
       language: r.language || 'Unknown',
     })),
     stats,
+    organizations: orgs,
     customSections,
   }
 

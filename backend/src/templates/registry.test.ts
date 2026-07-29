@@ -12,7 +12,9 @@ const mockUser: UserData = {
   avatarUrl: 'https://avatars.githubusercontent.com/u/0',
   languages: 'TypeScript, Rust',
   languageBreakdown: { TypeScript: 5, Rust: 3 },
+  languageBytes: { TypeScript: 5000, Rust: 3000 },
   stats: { totalStars: 10, totalForks: 2, totalRepos: 5, totalPRs: 3, topLanguages: { TypeScript: 5 }, contributionYears: 2 },
+  organizations: ['org1'],
   customSections: [],
   projects: [
     { name: 'proj1', description: 'First project', url: 'https://github.com/testuser/proj1', stars: 10, language: 'TypeScript' },

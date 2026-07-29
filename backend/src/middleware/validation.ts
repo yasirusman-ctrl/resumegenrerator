@@ -1,6 +1,9 @@
 import { z } from 'zod'
 import type { Context, Next } from 'hono'
 
+const accentColors = ['blue', 'green', 'red', 'purple', 'orange', 'teal', 'pink', 'gray'] as const
+const fonts = ['inter', 'outfit', 'roboto', 'mono', 'serif'] as const
+
 export const generateSchema = z.object({
   username: z
     .string()
@@ -8,6 +11,9 @@ export const generateSchema = z.object({
     .max(39, 'GitHub username is too long')
     .regex(/^[a-zA-Z0-9-]+$/, 'Invalid GitHub username format'),
   template: z.enum(['modern', 'classic', 'minimal', 'technical', 'creative']).default('modern'),
+  format: z.enum(['pdf', 'html']).default('pdf'),
+  accent: z.enum(accentColors).default('blue'),
+  font: z.enum(fonts).default('inter'),
   customSections: z
     .array(
       z.object({
@@ -20,6 +26,8 @@ export const generateSchema = z.object({
 })
 
 export type GenerateInput = z.infer<typeof generateSchema>
+export type AccentColor = (typeof accentColors)[number]
+export type Font = (typeof fonts)[number]
 
 export function validate<T>(schema: z.ZodSchema<T>) {
   return async (c: Context, next: Next) => {
